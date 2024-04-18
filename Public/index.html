@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<style>
+    
+</style>
+
+
+<body>
+    <div class="full">
+        <h2 id="h">Users List</h2>
+        <ul id="userList"></ul>
+        <form id="addUserForm">
+            <label id="name" for="name">Name:</label>
+            <input type="text" id="name" name="name">
+            <br><br>
+            <label id="email" for="email">Email:</label>
+            <input type="text" id="email" name="email">
+            <br><br>
+            <label id="pass" for="password">Password:</label>
+            <input type="password" id="password" name="password">
+            <br><br>
+            <button type="submit" id="addUserBtn">Add User</button>
+        </form>
+    </div>
+    <script>
+        const fetchUsers = () => {
+            fetch('/users')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(users => {
+                    const userList = document.getElementById('userList');
+                    userList.innerHTML = '';
+
+                    users.forEach(user => {
+                        const li = document.createElement('li');
+                        li.textContent = `${user.name} - ${user.email}`;
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.addEventListener('click', () => {
+                            deleteUser(user._id);
+                        });
+                        li.appendChild(deleteButton);
+                        userList.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching users:', error);
+                });
+        };
+
+
+
+        const deleteUser = userId => {
+            fetch(`/users/${userId}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    fetchUsers();
+                })
+                .catch(error => {
+                    console.error('Error deleting user:', error);
+                });
+        };
+
+        document.getElementById('addUserForm').addEventListener('submit', event => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const newUser = {};
+            formData.forEach((value, key) => {
+                newUser[key] = value;
+            });
+            fetch('/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newUser)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    fetchUsers();
+                    document.getElementById('addUserForm').reset();
+                })
+                .catch(error => {
+                    console.error('Error adding user:', error);
+                });
+        });
+
+        window.onload = fetchUsers;
+
+
+
+
+    </script>
+</body>
+
+</html>
